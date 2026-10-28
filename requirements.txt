@@ -12,8 +12,11 @@ chromadb>=1.0
 rank-bm25>=0.2.2
 jieba>=0.42
 
-# Embedding（CPU 版 torch 即可；若要 GPU：
-#   pip install torch --index-url https://download.pytorch.org/whl/cu126）
+# Embedding
+# torch 由 sentence-transformers 间接依赖，本项目用本机 CUDA 版跑 GPU：
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
+# 已装 CUDA 版（如 2.x+cu126）时本文件不会覆盖它（满足 >=2.3 即跳过），
+# 但请勿加 --upgrade / --force-reinstall，否则会从 PyPI 装成 CPU 版（cuda 不可用）。
 torch>=2.3
 sentence-transformers>=3.0
 
