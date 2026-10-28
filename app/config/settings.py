@@ -32,8 +32,14 @@ class Settings(BaseSettings):
 
     # ---------- Embedding ----------
     embedding_model: str = "BAAI/bge-small-zh-v1.5"
-    embedding_device: str = "cpu"          # 本机 vLLM 已占 78% 显存，embedding 走 CPU 更快
+    embedding_device: str = "cuda"         # 用本机已装的 CUDA 版 torch；CUDA 不可用时自动回退 CPU
     embedding_batch_size: int = 32
+
+    # ---------- 重排序（默认关闭；开启后召回 8 条精排取 3 条） ----------
+    enable_rerank: bool = False
+    rerank_model: str = "BAAI/bge-reranker-base"
+    rerank_device: str = "cpu"             # 8GB 显存放不下 vLLM+reranker，显存充足时改 cuda
+    rerank_top_n: int = 3
 
     # ---------- 分块 ----------
     chunk_size: int = 480                  # 中文约等于 480 字，接近一段完整工艺描述

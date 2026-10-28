@@ -16,6 +16,8 @@ from dataclasses import dataclass, field
 from app.config.settings import get_settings
 from app.generation import llm, prompts
 from app.retrieval.hybrid import HybridRetriever, Retrieved
+from app.retrieval import reranker
+
 
 logger = logging.getLogger(__name__)
 
@@ -176,6 +178,7 @@ class RagService:
             )
 
         hits = _gate_by_entity(hits, _entity_terms(question))
+        hits = reranker.rerank(question, hits)  # 精排：交叉编码器重排
         hits = _filter_hits(hits, settings.min_similarity)
         context, citations = _build_context(hits)
         answer = llm.chat(
