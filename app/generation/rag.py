@@ -65,6 +65,35 @@ def _filter_hits(hits: list[Retrieved], floor: float) -> list[Retrieved]:
     return filtered or hits[:1]
 
 
+# 模型会写 [1]、[1, 5]、[1，2]、[1、2] 几种并列形式，要能把一组里的编号都拆出来
+CITATION_MARK_RE = r"\[\s*(\d+(?:\s*[,，、]\s*\d+)*)\s*\]"
+
+
+def _citation_marks(text: str) -> list[int]:
+    """抽出文本里出现的所有引用编号（展开并列写法）。"""
+    return [
+        int(n)
+        for group in re.findall(CITATION_MARK_RE, text)
+        for n in re.findall(r"\d+", group)
+    ]
+
+
+def _sanitize_citation_marks(answer: str, valid: set[int]) -> str:
+    """抹掉指向不存在资料的编号。
+
+    模型会凭空写不存在的编号（只召回 1 条却写 [1, 5]），悬空标号会让人以为
+    真的有第 5 条依据。保留编号前的空格，避免把“继电器 [1]”挤成“继电器[1]”。
+    """
+
+    def _clean(match: re.Match) -> str:
+        kept = [n for n in _citation_marks(match.group(0)) if n in valid]
+        if not kept:
+            return ""
+        return match.group(1) + "[" + ", ".join(str(n) for n in kept) + "]"
+
+    return re.sub(r"(\s*)" + CITATION_MARK_RE, _clean, answer)
+
+
 @dataclass(slots=True)
 class Citation:
     index: int
@@ -204,8 +233,11 @@ class RagService:
             )
 
         # 只保留模型真正引用过的条目，避免“引了一堆但一个没用”的假溯源
-        used_marks = {int(m) for m in re.findall(r"\[(\d+)\]", answer)}
+        used_marks = set(_citation_marks(answer))
         citations = [c for c in citations if c.index in used_marks] or citations
+
+        # 反向再清一遍：抹掉指向不存在资料的编号
+        answer = _sanitize_citation_marks(answer, {c.index for c in citations})
 
         # 引用溯源：固定附在答案末尾，前端与评测都按"依据："识别
         cite_lines = "；".join(

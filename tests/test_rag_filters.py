@@ -1,11 +1,18 @@
 """检索后处理的单测：全是纯函数，不加载任何模型。
 
-这里覆盖的是项目里最容易回归出问题的三处：
-型号实体门控、跨文档噪声过滤、相似度落差裁剪。
+这里覆盖的是项目里最容易回归出问题的几处：型号实体门控、跨文档噪声过滤、
+相似度落差裁剪，以及答案里引用编号的解析与清洗。
 """
 from __future__ import annotations
 
-from app.generation.rag import MAX_SOURCES, _entity_terms, _filter_hits, _gate_by_entity
+from app.generation.rag import (
+    MAX_SOURCES,
+    _citation_marks,
+    _entity_terms,
+    _filter_hits,
+    _gate_by_entity,
+    _sanitize_citation_marks,
+)
 from app.retrieval.hybrid import Retrieved
 
 
@@ -66,3 +73,23 @@ def test_filter_hits_never_returns_empty():
     """全部低于阈值时也要留一条，交给上层置信度闸门判断，而不是在这里静默清空。"""
     hits = [_hit("无关内容", "d1.md", 0.10)]
     assert len(_filter_hits(hits, 0.40)) == 1
+
+
+def test_citation_marks_expands_grouped_form():
+    """模型会写 [1, 5]；早期只用 r"\\[(\\d+)\\]" 时只能抽出 1，把 [1，2] 的第 2 条也丢了。"""
+    assert _citation_marks("见 [1]") == [1]
+    assert _citation_marks("见 [1, 5]") == [1, 5]
+    assert _citation_marks("见 [1，2] 与 [3、4]") == [1, 2, 3, 4]
+    assert _citation_marks("没有任何编号") == []
+
+
+def test_sanitize_drops_dangling_mark():
+    """只召回 1 条却写 [1, 5] 时，必须抹掉 5，否则看起来像有第 5 条依据。"""
+    assert _sanitize_citation_marks("检查固态继电器 [1, 5]。", {1}) == "检查固态继电器 [1]。"
+    assert _sanitize_citation_marks("只有 [5] 存在", {1}) == "只有 存在"
+
+
+def test_sanitize_keeps_leading_space():
+    """编号前的空格要保留，否则中文与 [n] 会挤在一起。"""
+    assert _sanitize_citation_marks("温度 240 度 [1]。", {1}) == "温度 240 度 [1]。"
+    assert _sanitize_citation_marks("温度 240 度[1]。", {1}) == "温度 240 度[1]。"
