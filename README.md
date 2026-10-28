@@ -184,22 +184,31 @@ python -m scripts.smoke_api                 # 另开一个终端，一次验证 
 | `DELETE` | `/documents/{source}` | 按文件名删除（向量库与源文件同步删除） | 404 文档不存在 |
 | `GET` | `/health` | 探活：文档数 / 分块数 / 模型连通性 | — |
 
-`POST /chat` 请求与响应：
+`POST /chat` 请求：
 
 ```json
-// 请求
 {"question": "注塑机出现 E-102 报警应该怎么处理？", "top_k": 5}
+```
 
-// 响应（截断）
+响应（`answer` 与 `snippet` 已截断，省略号是正文内容不是语法）：
+
+```json
 {
-  "answer": "注塑机出现 E-102 报警应该按照以下步骤处理：1. 立即停止射胶……\n\n依据：[1] 注塑机IMM-260操作与维护手册.md §3. 报警处理",
+  "answer": "注塑机出现 E-102 报警应该按照以下步骤处理：1. 立即停止射胶……\n\n依据：[1] 注塑机IMM-260操作与维护手册.md §3.1 E-102 料筒温度超限",
   "refused": false,
   "confidence": 0.587,
   "used_rewrite": false,
   "retrieved": 1,
   "latency_ms": 1829,
-  "citations": [{"index": 1, "source": "注塑机IMM-260操作与维护手册.md",
-                 "page": null, "section": "3. 报警处理", "snippet": "……"}]
+  "citations": [
+    {
+      "index": 1,
+      "source": "注塑机IMM-260操作与维护手册.md",
+      "page": null,
+      "section": "3.1 E-102 料筒温度超限",
+      "snippet": "……"
+    }
+  ]
 }
 ```
 
