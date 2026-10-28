@@ -53,12 +53,14 @@ async function ask() {
       return;
     }
     const d = await r.json();
+    // answer 末尾已带「依据：…」，引用下面单独渲染，这里剪掉避免重复
+    const main = d.answer.split('依据：')[0].trim();
     const cites = (d.citations || [])
       .map(c => `<div class="cite">[${c.index}] ${c.source}${c.page ? ' p.' + c.page : ' §' + c.section}</div>`)
       .join('');
     out.innerHTML = `
       <div class="card">
-        <div class="answer${d.refused ? ' refused' : ''}">${escapeHtml(d.answer)}</div>
+        <div class="answer${d.refused ? ' refused' : ''}">${escapeHtml(main)}</div>
         ${cites}
         <div class="meta">置信度 ${d.confidence.toFixed(3)} · 耗时 ${d.latency_ms} ms · 召回 ${d.retrieved} 条 · 改写 ${d.used_rewrite ? '是' : '否'}</div>
       </div>`;
@@ -75,6 +77,10 @@ function escapeHtml(s) {
 
 btn.addEventListener('click', ask);
 q.addEventListener('keydown', e => { if (e.key === 'Enter') ask(); });
+
+// 支持 /?q=... 带问题直接打开，方便演示与自动截图
+const preset = new URLSearchParams(location.search).get('q');
+if (preset) { q.value = preset; ask(); }
 </script>
 </body>
 </html>
