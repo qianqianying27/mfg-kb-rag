@@ -1,0 +1,22 @@
+# 运行时依赖（已在 Python 3.12 + Windows 11 验证）
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+pydantic>=2.7
+pydantic-settings>=2.3
+openai>=1.40
+pypdf>=5.0
+
+# 检索
+chromadb>=1.0
+rank-bm25>=0.2.2
+jieba>=0.42
+
+# Embedding（CPU 版 torch 即可；若要 GPU：
+#   pip install torch --index-url https://download.pytorch.org/whl/cu126）
+torch>=2.3
+sentence-transformers>=3.0
+
+# 开发/评测
+pytest>=8.0
+rich>=13.0

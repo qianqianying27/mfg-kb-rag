@@ -1,0 +1,10 @@
+{"id":"q01","question":"XYZ-320 轴承的更换周期是多少？","expect_refuse":false,"expected_keywords":["2000"],"expected_source":"轴承保养与更换规程.md"}
+{"id":"q02","question":"XYZ-320 轴承配套的润滑脂是什么型号？","expect_refuse":false,"expected_keywords":["LGHP2"],"expected_source":"轴承保养与更换规程.md"}
+{"id":"q03","question":"注塑机出现 E-102 报警应该怎么处理？","expect_refuse":false,"expected_keywords":["热电偶"],"expected_source":"注塑机IMM-260操作与维护手册.md"}
+{"id":"q04","question":"轴承振动值超过多少必须停机检查？","expect_refuse":false,"expected_keywords":["7.1"],"expected_source":"轴承保养与更换规程.md"}
+{"id":"q05","question":"螺杆空压机排气温度超过多少会自动停机？","expect_refuse":false,"expected_keywords":["105"],"expected_source":"螺杆空压机AC-75点检与安全规程.md"}
+{"id":"q06","question":"E-206 急停按钮报警，需要沿产线确认哪些位置的按钮？","expect_refuse":false,"expected_keywords":["安全通道"],"expected_source":"PLC故障代码对照表.md"}
+{"id":"q07","question":"注塑机料筒第三段温度设定为多少度？","expect_refuse":false,"expected_keywords":["240"],"expected_source":"注塑机IMM-260操作与维护手册.md"}
+{"id":"q08","question":"激光切割机 LC-800 的切割速度是多少？","expect_refuse":true,"expected_keywords":[],"expected_source":null}
+{"id":"q09","question":"XYZ-999 轴承的更换周期是多少？","expect_refuse":true,"expected_keywords":[],"expected_source":null}
+{"id":"q10","question":"公司食堂中午几点开饭？","expect_refuse":true,"expected_keywords":[],"expected_source":null}
