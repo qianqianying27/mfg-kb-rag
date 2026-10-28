@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设备知识库问答</title>
+<style>
+  body { font-family: system-ui, "Microsoft YaHei", sans-serif; max-width: 820px; margin: 0 auto; padding: 24px; color: #222; }
+  h1 { font-size: 20px; }
+  .hint { color: #888; font-size: 13px; margin-bottom: 16px; }
+  .row { display: flex; gap: 8px; }
+  input { flex: 1; padding: 10px 12px; font-size: 15px; border: 1px solid #ccc; border-radius: 6px; }
+  button { padding: 10px 20px; font-size: 15px; border: 0; border-radius: 6px; background: #2b6cb0; color: #fff; cursor: pointer; }
+  button:disabled { background: #a0aec0; cursor: not-allowed; }
+  .card { margin-top: 18px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fafafa; }
+  .answer { white-space: pre-wrap; line-height: 1.7; font-size: 15px; }
+  .meta { margin-top: 12px; font-size: 12px; color: #777; }
+  .cite { margin-top: 10px; font-size: 13px; color: #444; }
+  .refused { color: #c53030; }
+  .err { color: #c53030; }
+</style>
+</head>
+<body>
+  <h1>制造业设备知识库</h1>
+  <div class="hint">问设备手册里的内容，答案会带原文出处；知识库里没有的会直接说没找到。</div>
+
+  <div class="row">
+    <input id="q" placeholder="例如：注塑机出现 E-102 报警应该怎么处理？" autofocus>
+    <button id="ask">提问</button>
+  </div>
+
+  <div id="out"></div>
+
+<script>
+const q = document.getElementById('q');
+const btn = document.getElementById('ask');
+const out = document.getElementById('out');
+
+async function ask() {
+  const question = q.value.trim();
+  if (!question) return;
+  btn.disabled = true;
+  out.innerHTML = '<div class="card">检索中…</div>';
+  try {
+    const r = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question })
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({ detail: r.statusText }));
+      out.innerHTML = `<div class="card err">请求失败（${r.status}）：${err.detail || ''}</div>`;
+      return;
+    }
+    const d = await r.json();
+    const cites = (d.citations || [])
+      .map(c => `<div class="cite">[${c.index}] ${c.source}${c.page ? ' p.' + c.page : ' §' + c.section}</div>`)
+      .join('');
+    out.innerHTML = `
+      <div class="card">
+        <div class="answer${d.refused ? ' refused' : ''}">${escapeHtml(d.answer)}</div>
+        ${cites}
+        <div class="meta">置信度 ${d.confidence.toFixed(3)} · 耗时 ${d.latency_ms} ms · 召回 ${d.retrieved} 条 · 改写 ${d.used_rewrite ? '是' : '否'}</div>
+      </div>`;
+  } catch (e) {
+    out.innerHTML = `<div class="card err">网络错误：${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+btn.addEventListener('click', ask);
+q.addEventListener('keydown', e => { if (e.key === 'Enter') ask(); });
+</script>
+</body>
+</html>

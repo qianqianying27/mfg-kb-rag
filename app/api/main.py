@@ -15,6 +15,8 @@ import time
 from collections import Counter
 from contextlib import asynccontextmanager
 from pathlib import Path
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 
@@ -62,6 +64,16 @@ def _warmup_bg() -> None:
         logger.info("后台预热耗时 %.0f ms", (time.perf_counter() - started) * 1000)
     except Exception:  # 预热失败不影响服务可用，首个请求会自然加载
         logger.exception("后台预热失败，将在首个请求时惰性加载")
+
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def index() -> FileResponse:
+    """极简对话页：不依赖任何前端框架，打开就能用。"""
+    return FileResponse(STATIC_DIR / "index.html")
 
 
 @app.get("/health", response_model=HealthResponse, summary="健康检查")
